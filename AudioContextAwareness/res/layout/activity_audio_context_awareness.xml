@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_width="fill_parent"
+    android:layout_height="match_parent" xmlns:android="http://schemas.android.com/apk/res/android" android:gravity="top" xmlns:tools="http://schemas.android.com/tools">
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="16dip" 
+        android:layout_margin="@dimen/padding_medium" 
+        android:max="100"
+        />
+    <View
+        android:id="@+id/layoutHelper"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        />
+    <Spinner 
+        android:id="@+id/contextSpinner"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/layoutHelper"
+        android:layout_below="@+id/progressBar"
+        android:layout_marginTop="25dip"
+        />
+    <Button 
+        android:id="@+id/addContextButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/layoutHelper"
+        android:text="Add New Location Context"
+        android:layout_below="@+id/progressBar"
+        android:layout_marginTop="25dip"
+        android:onClick="addNewLocationContextListener"
+        />
+    <Button
+        android:id="@+id/categorizeAudioButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/contextSpinner"
+        android:text="Categorize Audio"
+        android:onClick="categorizeAudioButtonListener"
+        android:layout_marginTop="25dip"
+        />
+    
+    <TextView 
+        android:id="@+id/resultsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/categorizeAudioButton"
+        android:text=""
+        android:gravity="center"
+        />
+
+    
+</RelativeLayout>
