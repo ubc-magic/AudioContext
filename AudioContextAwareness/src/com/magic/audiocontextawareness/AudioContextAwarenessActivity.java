@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -20,9 +22,11 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -31,6 +35,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class AudioContextAwarenessActivity extends Activity {
@@ -73,8 +78,82 @@ public class AudioContextAwarenessActivity extends Activity {
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, contextList);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         contextSpinner.setAdapter(dataAdapter);
+        updateCompPointDB(this);
     }
 
+    private void updateCompPointDB(Context context){
+    	File root = new File(Environment.getExternalStorageDirectory(), "\\aca");//context.getFilesDir();
+		File valsFile = new File(root, "vals.txt");
+		File typesFile = new File(root, "types.txt");
+		File versionFile = new File(root, "version.txt");
+		File numFile = new File(root, "num.txt");
+		boolean copyFiles = false;
+		
+		if(valsFile.exists() && typesFile.exists() && valsFile.exists()){
+			try{
+				BufferedReader versionBR = new BufferedReader(new InputStreamReader(context.openFileInput("version.txt")));
+				int internalVersion = Integer.parseInt(versionBR.readLine());
+				int apkVersion = context.getResources().getInteger(R.string.compPointVersion);
+				if(apkVersion > internalVersion){
+					copyFiles = true;
+				}
+			} catch(Exception e){
+				copyFiles = true;
+			}
+		} else{
+			copyFiles = true;
+		}
+		
+		if(copyFiles){
+			copyCompPointsDB(context, valsFile, typesFile, versionFile, numFile);
+		}
+			
+	}
+	
+	private void copyCompPointsDB(Context context, File valsFile, File typesFile, File versionFile, File numFile){
+		AssetManager am = context.getAssets();
+		
+		try{
+			//write vals
+			InputStream in = am.open("vals.txt");
+			OutputStream out = new FileOutputStream(valsFile);
+			copyFile(in, out);
+			in.close();
+			out.close();
+			
+			//write types
+			in = am.open("types.txt");
+			out = new FileOutputStream(typesFile);
+			copyFile(in, out);
+			in.close();
+			out.close();
+			
+			//write number
+			in = am.open("num.txt");
+			out = new FileOutputStream(numFile);
+			copyFile(in, out);
+			in.close();
+			out.close();
+			
+			//write version
+			BufferedWriter bout = new BufferedWriter(new FileWriter(versionFile, false));
+			bout.write(Integer.toString(context.getResources().getInteger(R.string.compPointVersion)));
+			bout.close();
+			
+		} catch(Exception e){
+			Log.e("UpdateCompPointDB", e.getMessage());
+		}
+	}
+	
+	private void copyFile(InputStream in, OutputStream out) throws IOException{
+		byte[] buffer = new byte[1024];
+		int read;
+		while((read = in.read(buffer)) != -1){
+			out.write(buffer, 0, read);
+		}
+	}
+	
+	
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_audio_context_awareness, menu);
@@ -90,7 +169,7 @@ public class AudioContextAwarenessActivity extends Activity {
     
     public void addNewLocationContextListener(View v){
     	disableButtons();
-    	AddLocationPointAsyncTask aLPAsyncTask = new AddLocationPointAsyncTask(this, (CONTEXT)contextSpinner.getSelectedItem());
+    	AddLocationPointAsyncTask aLPAsyncTask = new AddLocationPointAsyncTask(this, CONTEXT.valueOf((String)contextSpinner.getSelectedItem()));
     	aLPAsyncTask.execute();
     }
     
@@ -174,7 +253,7 @@ public class AudioContextAwarenessActivity extends Activity {
     			secNumber = read1sAudio(energyBands[second], windowsPerSecond, secNumber, recorder, data, tempEnergyBands, fftIn, fftOut, fft);
     			publishProgress(secNumber);
     		}
-    		
+    		recorder.stop();
     		//analysis turning the collected data into 1 representative point
     		for(int i = 0; i < CONST.SECONDS_TO_RUN_ADD.val/2; ++i){
     			removeFurthestPoint(energyBands);
@@ -240,7 +319,7 @@ public class AudioContextAwarenessActivity extends Activity {
     		progressBar.setProgress(progressBar.getMax());
     		
     		//write new point
-    		File root = context.getFilesDir();
+    		File root = new File(Environment.getExternalStorageDirectory(), "aca"); //context.getFilesDir();
 			File valsFile = new File(root, "vals.txt");
 			File typesFile = new File(root, "types.txt");
 			File numFile = new File(root, "num.txt");
@@ -261,7 +340,8 @@ public class AudioContextAwarenessActivity extends Activity {
 				valsOut.close();
 				typesOut.close();
 				numOut.close();
-
+				
+				Toast.makeText(context, "Added new point. " + Integer.toString(numPoints) + " total.", Toast.LENGTH_SHORT).show();
 			} catch(Exception e){
 				e.printStackTrace();
 			}

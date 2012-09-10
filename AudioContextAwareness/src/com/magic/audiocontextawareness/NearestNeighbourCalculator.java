@@ -24,12 +24,12 @@ public class NearestNeighbourCalculator{
 	
 	public NearestNeighbourCalculator(Context context){
 		try{
-			File root = context.getFilesDir();
+			File root = new File(Environment.getExternalStorageDirectory(), "aca"); //context.getFilesDir();
 			File valsFile = new File(root, "vals.txt");
 			File typesFile = new File(root, "types.txt");
 			File versionFile = new File(root, "version.txt");
 			File numFile = new File(root, "num.txt");
-			updateCompPointDB(context, valsFile, typesFile, versionFile);
+			
 			BufferedReader numBR = new BufferedReader(new InputStreamReader(new FileInputStream(numFile)));
 			BufferedReader typesBR = new BufferedReader(new InputStreamReader(new FileInputStream(typesFile)));
 			DataInputStream dis = new DataInputStream(new FileInputStream(valsFile));
@@ -74,67 +74,7 @@ public class NearestNeighbourCalculator{
 		return minContextType;
 	}
 	
-	private void updateCompPointDB(Context context, File valsFile, File typesFile, File versionFile){
-		boolean copyFiles = false;
-		
-		if(valsFile.exists() || typesFile.exists()){
-			try{
-				InputStream is = context.openFileInput("version.txt");
-				InputStreamReader isr = new InputStreamReader(is);
-				BufferedReader versionBR = new BufferedReader(isr);
-				int internalVersion = Integer.parseInt(versionBR.readLine());
-				int apkVersion = context.getResources().getInteger(R.string.compPointVersion);
-				if(apkVersion > internalVersion){
-					copyFiles = true;
-				}
-			} catch(Exception e){
-				copyFiles = true;
-			}
-		} else{
-			copyFiles = true;
-		}
-		
-		if(copyFiles){
-			copyCompPointsDB(context, valsFile, typesFile, versionFile);
-		}
-			
-	}
 	
-	private void copyCompPointsDB(Context context, File valsFile, File typesFile, File versionFile){
-		AssetManager am = context.getAssets();
-		
-		try{
-			//write vals
-			InputStream in = am.open("vals.txt");
-			OutputStream out = new FileOutputStream(valsFile);
-			copyFile(in, out);
-			in.close();
-			out.close();
-			
-			//write types
-			in = am.open("types.txt");
-			out = new FileOutputStream(typesFile);
-			copyFile(in, out);
-			in.close();
-			out.close();
-			
-			//write version
-			BufferedWriter bout = new BufferedWriter(new FileWriter(versionFile, false));
-			bout.write(Integer.toString(context.getResources().getInteger(R.string.compPointVersion)));
-			bout.close();
-			
-		} catch(Exception e){
-			Log.e("UpdateCompPointDB", e.getMessage());
-		}
-	}
-	
-	private void copyFile(InputStream in, OutputStream out) throws IOException{
-		byte[] buffer = new byte[1024];
-		int read;
-		while((read = in.read(buffer)) != -1){
-			out.write(buffer, 0, read);
-		}
-	}
 }
 
 class CompPoint{
